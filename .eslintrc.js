@@ -163,10 +163,10 @@ module.exports = {
                 },
             },
         ],
-        'jsdoc/require-param': 'warn', // Recommended
+        'jsdoc/require-param': 'error', // Recommended
         'jsdoc/require-param-description': 'warn', // Recommended
-        'jsdoc/require-param-name': 'warn', // Recommended
-        'jsdoc/require-param-type': 'warn', // Recommended
+        'jsdoc/require-param-name': 'error', // Recommended
+        'jsdoc/require-param-type': 'error', // Recommended
         'jsdoc/require-property': 'warn', // Recommended
         'jsdoc/require-property-description': 'warn', // Recommended
         'jsdoc/require-property-name': 'warn', // Recommended
