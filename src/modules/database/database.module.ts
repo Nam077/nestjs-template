@@ -3,7 +3,6 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { MainConfigService } from './service/main-config.service';
-import { ConnectionName } from '../../common';
 
 /**
  * The module connect to the database.
@@ -11,10 +10,10 @@ import { ConnectionName } from '../../common';
 @Module({
     imports: [
         TypeOrmModule.forRootAsync({
-            name: ConnectionName.DEFAULT,
             useClass: MainConfigService,
         }),
         ConfigModule.forRoot({}),
     ],
+    providers: [MainConfigService],
 })
 export class DatabaseModule {}
