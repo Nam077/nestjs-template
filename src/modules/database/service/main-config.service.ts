@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
 
 import { ConnectionName } from '../../../common';
+import { User } from '../../user/entities/user.entity';
 
 /**
  *
@@ -20,8 +21,6 @@ export class MainConfigService implements TypeOrmOptionsFactory {
      * @returns {TypeOrmModuleOptions} - The type orm options or a promise of type orm options
      */
     createTypeOrmOptions(connectionName?: ConnectionName): TypeOrmModuleOptions {
-        const entities = [];
-
         if (connectionName === ConnectionName.LOGGING) {
             return {
                 type: 'mysql',
@@ -30,7 +29,7 @@ export class MainConfigService implements TypeOrmOptionsFactory {
                 username: this.configService.get<string>('DATABASE_USERNAME'),
                 password: this.configService.get<string>('DATABASE_PASSWORD'),
                 database: this.configService.get<string>('DATABASE_NAME'),
-                entities: entities,
+                entities: [User],
                 synchronize: true,
                 logging: true,
             };
@@ -43,8 +42,9 @@ export class MainConfigService implements TypeOrmOptionsFactory {
             username: this.configService.get<string>('DATABASE_USERNAME'),
             password: this.configService.get<string>('DATABASE_PASSWORD'),
             database: this.configService.get<string>('DATABASE_NAME'),
-            entities: entities,
-            synchronize: false,
+            entities: [User],
+            synchronize: true,
+            autoLoadEntities: true,
         };
     }
 }

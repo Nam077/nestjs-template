@@ -21,21 +21,4 @@ export class AppService {
 
         return 'Hello World!';
     }
-
-    /**
-     * @param {string} name - The name
-     * @returns {string} - Hello {name}
-     */
-    getName(name: string): string {
-        return `Hello ${name}`;
-    }
-
-    /**
-     * @param {string} chui - The chui
-     * @returns {string} - Chui hai zuka {chui}
-     * @description Funtrion to chui hai zuka
-     */
-    chuiHaiZuka(chui: string): string {
-        return `Chui hai zuka ${chui}`;
-    }
 }
