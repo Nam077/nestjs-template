@@ -1,11 +1,4 @@
-import {
-    ConflictException,
-    HttpException,
-    HttpStatus,
-    Injectable,
-    NotFoundException,
-    UnauthorizedException,
-} from '@nestjs/common';
+import { ConflictException, HttpStatus, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
@@ -14,15 +7,25 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { FindAllUserDto } from './dto/find-all.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import { CRUDInterface, FindOneOptionsCustom, ResponseData } from '../../common';
+import { CRUDInterface, FindOneOptionsCustom, PaginationData, ResponseData } from '../../common';
+import { findWithPaginationAndSearch, SearchField } from '../../common/helpers/paginate';
 import { LoginDto } from '../auth/dtos/login.dto';
 
 /**
- *
+ * User service implementation
  */
 @Injectable()
 export class UserService
-    implements CRUDInterface<User, CreateUserDto, UpdateUserDto, ResponseData<User>, FindAllUserDto>
+    implements
+        CRUDInterface<
+            User,
+            CreateUserDto,
+            UpdateUserDto,
+            ResponseData<User>,
+            FindAllUserDto,
+            PaginationData<User>,
+            User
+        >
 {
     /**
      * @description Constructor of the UserService
@@ -39,17 +42,19 @@ export class UserService
      * @returns {Promise<boolean>} - Whether the email exists
      */
     async checkExistByEmail(email: string): Promise<boolean> {
-        return await this.userRepository.existsBy({ email });
+        return await this.userRepository.exist({ where: { email } });
     }
 
     /**
-     * @description Create a new user from the creation data transfer object
+     * @description Create a new user
      * @param {CreateUserDto} createDTO - Create user data transfer object
+     * @param {User} currentUser - The current user performing the action
      * @returns {Promise<ResponseData<User>>} - Response data
-     * @throws {HttpException} - Http exception
      */
-    async create(createDTO: CreateUserDto): Promise<ResponseData<User>> {
-        const createdUser = await this.createHandler(createDTO);
+    async create(createDTO: CreateUserDto, currentUser: User): Promise<ResponseData<User>> {
+        const createdUser = await this.createEntity(createDTO);
+
+        console.log(currentUser);
 
         return {
             status: HttpStatus.CREATED,
@@ -62,9 +67,8 @@ export class UserService
      * @description Create a new user from the creation data transfer object
      * @param {CreateUserDto} createDTO - Create user data transfer object
      * @returns {Promise<User>} - User entity
-     * @throws {HttpException} - Http exception
      */
-    async createHandler(createDTO: CreateUserDto): Promise<User> {
+    async createEntity(createDTO: CreateUserDto): Promise<User> {
         const { name, email, role, password } = createDTO;
         const isEmailExist = await this.checkExistByEmail(email);
 
@@ -72,12 +76,12 @@ export class UserService
             throw new ConflictException('Email already exists');
         }
 
-        const user = new User();
-
-        user.name = name;
-        user.email = email;
-        user.role = role;
-        user.password = password;
+        const user = this.userRepository.create({
+            name,
+            email,
+            role,
+            password,
+        });
 
         return await this.userRepository.save(user);
     }
@@ -85,12 +89,18 @@ export class UserService
     /**
      * @description Delete a user by id
      * @param {string} id - User id
+     * @param {User} currentUser - The current user performing the action
      * @param {boolean} force - Force delete
      * @returns {Promise<ResponseData<User>>} - Response data
-     * @throws {HttpException} - Http exception
      */
-    async delete(id: string, force: boolean | undefined): Promise<ResponseData<User>> {
-        return Promise.resolve(undefined);
+    async delete(id: string, currentUser: User, force?: boolean): Promise<ResponseData<User>> {
+        const deletedUser = await this.deleteEntity(id, force);
+
+        return {
+            status: HttpStatus.OK,
+            message: 'User deleted successfully',
+            data: deletedUser,
+        };
     }
 
     /**
@@ -99,39 +109,67 @@ export class UserService
      * @param {boolean} force - Force delete
      * @returns {Promise<User>} - User entity
      */
-    async deleteHandler(id: string, force: boolean | undefined): Promise<User> {
-        return Promise.resolve(undefined);
+    async deleteEntity(id: string, force?: boolean): Promise<User> {
+        const user = await this.findOneOrFail(id);
+
+        if (force) {
+            await this.userRepository.remove(user);
+        } else {
+            await this.userRepository.softRemove(user);
+        }
+
+        return user;
     }
 
     /**
      * @description Find all users
      * @param {FindAllUserDto} findAllDTO - Find all user data transfer object
+     * @param {User} currentUser - The current user performing the action
      * @returns {Promise<ResponseData<User>>} - Response data
-     * @throws {HttpException} - Http exception
      */
-    async findAll(findAllDTO: FindAllUserDto): Promise<ResponseData<User>> {
-        return Promise.resolve(undefined);
+    async findAll(findAllDTO: FindAllUserDto, currentUser: User): Promise<ResponseData<User>> {
+        const users = await this.findAllEntities(findAllDTO);
+
+        console.log(currentUser);
+
+        return {
+            status: HttpStatus.OK,
+            message: 'Users found successfully',
+            ...users,
+        };
     }
 
     /**
      * @description Find all users
      * @param {FindAllUserDto} findAllDTO - Find all user data transfer object
-     * @returns {Promise<User[]>} - User entities
-     * @throws {HttpException} - Http exception
-     * @throws {Error} - Error
+     * @param {boolean} includeDeleted - Include soft-deleted users if true
+     * @returns {Promise<PaginationData<User>>} - Pagination data
      */
-    async findAllHandler(findAllDTO: FindAllUserDto): Promise<User[]> {
-        return Promise.resolve([]);
+    async findAllEntities(findAllDTO: FindAllUserDto, includeDeleted?: boolean): Promise<PaginationData<User>> {
+        const fields: Array<keyof User> = ['id', 'name', 'email', 'role'];
+        const relations: string[] = [];
+        const searchFields: SearchField[] = [];
+
+        return await findWithPaginationAndSearch<User>(
+            this.userRepository,
+            findAllDTO,
+            fields,
+            includeDeleted || false,
+            relations,
+            searchFields,
+        );
     }
 
     /**
      * @description Find one user by id
      * @param {string} id - User id
+     * @param {User} currentUser - The current user performing the action
      * @returns {Promise<ResponseData<User>>} - Response data
-     * @throws {HttpException} - Http exception
      */
-    async findOne(id: string): Promise<ResponseData<User>> {
+    async findOne(id: string, currentUser: User): Promise<ResponseData<User>> {
         const user = await this.findOneOrFail(id);
+
+        console.log(currentUser);
 
         return {
             status: HttpStatus.FOUND,
@@ -144,25 +182,26 @@ export class UserService
      * @description Find one user by id
      * @param {string} id - User id
      * @param {FindOneOptionsCustom<User>} options - Find one options
+     * @param {boolean} includeDeleted - Include soft-deleted user if true
      * @returns {Promise<User>} - User entity
-     * @throws {HttpException} - Http exception
      */
-    async findOneHandler(id: string, options?: FindOneOptionsCustom<User>): Promise<User> {
+    async findEntityById(id: string, options?: FindOneOptionsCustom<User>, includeDeleted?: boolean): Promise<User> {
         return await this.userRepository.findOne({
             where: { id },
+            withDeleted: includeDeleted,
             ...options,
         });
     }
 
     /**
-     * @description Find one user by id
+     * @description Find one user by id or throw an exception if not found
      * @param {string} id - User id
      * @param {FindOneOptionsCustom<User>} options - Find one options
-     * @returns {Promise<ResponseData<User>>} - Response data
-     * @throws {HttpException} - Http exception
+     * @param {boolean} includeDeleted - Include soft-deleted user if true
+     * @returns {Promise<User>} - User entity
      */
-    async findOneOrFail(id: string, options?: FindOneOptionsCustom<User>): Promise<User> {
-        const user = await this.findOneHandler(id, options);
+    async findOneOrFail(id: string, options?: FindOneOptionsCustom<User>, includeDeleted?: boolean): Promise<User> {
+        const user = await this.findEntityById(id, options, includeDeleted);
 
         if (!user) {
             throw new NotFoundException('User not found');
@@ -172,57 +211,84 @@ export class UserService
     }
 
     /**
-     * @description Remove a user by id
+     * @description Remove a user by id (soft delete)
      * @param {string} id - User id
-     * @returns {Promise<User>} - User entity
-     * @throws {HttpException} - Http exception
-     * @throws {Error} - Error
-     */
-    async remove(id: string): Promise<ResponseData<User>> {
-        return Promise.resolve(undefined);
-    }
-
-    /**
-     * @description Remove a user by id
-     * @param {string} id - User id
-     * @returns {Promise<User>} - User entity
-     * @throws {HttpException} - Http exception
-     * @throws {Error} - Error
-     */
-    async removeHandler(id: string): Promise<User> {
-        return Promise.resolve(undefined);
-    }
-
-    /**
-     * @description Restore a user by id
-     * @param {string} id - User id
+     * @param {User} currentUser - The current user performing the action
      * @returns {Promise<ResponseData<User>>} - Response data
-     * @throws {HttpException} - Http exception
      */
-    async restore(id: string): Promise<ResponseData<User>> {
-        return Promise.resolve(undefined);
+    async remove(id: string, currentUser: User): Promise<ResponseData<User>> {
+        const removedUser = await this.softDeleteEntity(id);
+
+        console.log(currentUser);
+
+        return {
+            status: HttpStatus.OK,
+            message: 'User removed successfully',
+            data: removedUser,
+        };
+    }
+
+    /**
+     * @description Remove a user by id (soft delete)
+     * @param {string} id - User id
+     * @returns {Promise<User>} - User entity
+     */
+    async softDeleteEntity(id: string): Promise<User> {
+        const user = await this.findOneOrFail(id);
+
+        await this.userRepository.softRemove(user);
+
+        return user;
+    }
+
+    /**
+     * @description Restore a user by id
+     * @param {string} id - User id
+     * @param {User} currentUser - The current user performing the action
+     * @returns {Promise<ResponseData<User>>} - Response data
+     */
+    async restore(id: string, currentUser: User): Promise<ResponseData<User>> {
+        const restoredUser = await this.restoreEntity(id);
+
+        console.log(currentUser);
+
+        return {
+            status: HttpStatus.OK,
+            message: 'User restored successfully',
+            data: restoredUser,
+        };
     }
 
     /**
      * @description Restore a user by id
      * @param {string} id - User id
      * @returns {Promise<User>} - User entity
-     * @throws {HttpException} - Http exception
-     * @throws {Error} - Error
      */
-    async restoreHandler(id: string): Promise<User> {
-        return Promise.resolve(undefined);
+    async restoreEntity(id: string): Promise<User> {
+        const user = await this.findOneOrFail(id, undefined, true);
+
+        await this.userRepository.recover(user);
+
+        return user;
     }
 
     /**
      * @description Update a user by id
      * @param {string} id - User id
      * @param {UpdateUserDto} updateDTO - Update user data transfer object
+     * @param {User} currentUser - The current user performing the action
      * @returns {Promise<ResponseData<User>>} - Response data
-     * @throws {HttpException} - Http exception
      */
-    async update(id: string, updateDTO: UpdateUserDto): Promise<ResponseData<User>> {
-        return Promise.resolve(undefined);
+    async update(id: string, updateDTO: UpdateUserDto, currentUser: User): Promise<ResponseData<User>> {
+        const updatedUser = await this.updateEntity(id, updateDTO);
+
+        console.log(currentUser);
+
+        return {
+            status: HttpStatus.OK,
+            message: 'User updated successfully',
+            data: updatedUser,
+        };
     }
 
     /**
@@ -230,10 +296,13 @@ export class UserService
      * @param {string} id - User id
      * @param {UpdateUserDto} updateDTO - Update user data transfer object
      * @returns {Promise<User>} - User entity
-     * @throws {HttpException} - Http exception
      */
-    async updateHandler(id: string, updateDTO: UpdateUserDto): Promise<User> {
-        return Promise.resolve(undefined);
+    async updateEntity(id: string, updateDTO: UpdateUserDto): Promise<User> {
+        const user = await this.findOneOrFail(id);
+
+        Object.assign(user, updateDTO);
+
+        return await this.userRepository.save(user);
     }
 
     /**
@@ -247,15 +316,10 @@ export class UserService
 
         const user = await this.userRepository.findOne({
             where: { email },
-            select: {
-                name: true,
-                email: true,
-                role: true,
-                password: true,
-            },
+            select: ['name', 'email', 'role', 'password'],
         });
 
-        if (!user && !user.comparePassword(password)) {
+        if (!user || !user.comparePassword(password)) {
             throw new UnauthorizedException('Invalid credentials');
         }
 

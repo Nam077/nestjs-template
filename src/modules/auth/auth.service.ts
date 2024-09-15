@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 
 import { LoginDto } from './dtos/login.dto';
-import { JwtServiceGenerateToken, JwtToken } from './jwt.service';
+import { JwtPayload, JwtServiceGenerateToken, JwtToken } from './jwt.service';
 import { User } from '../user/entities/user.entity';
 import { UserService } from '../user/user.service';
 
 export interface LoginResponse {
     accessToken: string;
-    refreshToken: string;
     user: User;
+    refreshToken: string;
 }
 /**
  *
@@ -38,5 +38,21 @@ export class AuthService {
             ...token,
             user,
         };
+    }
+
+    /**
+     * @description Validate a user with the payload
+     * @param {JwtPayload} payload - The payload of the JWT token
+     * @returns {Promise<User>} - The user that is validated
+     */
+    async validateUser(payload: JwtPayload): Promise<User> {
+        return await this.userService.findEntityById(payload.sub, {
+            select: {
+                id: true,
+                email: true,
+                role: true,
+                name: true,
+            },
+        });
     }
 }

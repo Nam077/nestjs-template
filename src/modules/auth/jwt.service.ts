@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 
+import { KeyType } from '../../common/enums/key-type.enum';
+import { KeyService } from '../key/key.service';
 import { User } from '../user/entities/user.entity';
 
 export interface JwtPayload {
@@ -22,10 +24,12 @@ export class JwtServiceGenerateToken {
      * @description Constructor of the JwtServiceGenerateToken
      * @param {JwtService} jwtService - The jwt service instance
      * @param {ConfigService} configService - The config service instance
+     * @param {KeyService} keyService - The key service instance
      */
     constructor(
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
+        private readonly keyService: KeyService,
     ) {}
 
     /**
@@ -34,11 +38,14 @@ export class JwtServiceGenerateToken {
      * @returns {Promise<string>} - The access token of the user
      */
     async generateAccessToken(payload: User): Promise<string> {
+        const key = await this.keyService.getCurrentSecretKey(KeyType.ACCESS_KEY);
+
         return await this.jwtService.signAsync(
             { sub: payload.id, email: payload.email },
             {
-                secret: this.configService.get<string>('JWT_ACCESS_TOKEN_SECRET'),
+                secret: key.key,
                 expiresIn: this.configService.get<string>('JWT_ACCESS_TOKEN_EXPIRATION_TIME'),
+                keyid: key.id,
             },
         );
     }
@@ -49,11 +56,14 @@ export class JwtServiceGenerateToken {
      * @returns {Promise<string>} - The refresh token
      */
     async generateRefreshToken(payload: User): Promise<string> {
+        const key = await this.keyService.getCurrentSecretKey(KeyType.REFRESH_KEY);
+
         return await this.jwtService.signAsync(
             { sub: payload.id, email: payload.email },
             {
-                secret: this.configService.get<string>('JWT_REFRESH_TOKEN_SECRET'),
+                secret: key.key,
                 expiresIn: this.configService.get<string>('JWT_REFRESH_TOKEN_EXPIRATION_TIME'),
+                keyid: key.id,
             },
         );
     }

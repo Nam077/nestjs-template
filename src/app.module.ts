@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './modules/auth/auth.module';
 import { DatabaseModule } from './modules/database/database.module';
+import { KeyModule } from './modules/key/key.module';
 import { UserModule } from './modules/user/user.module';
 import { WinstonModuleConfig } from './modules/winston/winston.module';
-import { AuthModule } from './modules/auth/auth.module';
 
 /**
  * App module is the root module of the application.
@@ -21,6 +23,8 @@ import { AuthModule } from './modules/auth/auth.module';
         DatabaseModule,
         UserModule,
         AuthModule,
+        KeyModule,
+        ScheduleModule.forRoot(),
     ],
     controllers: [AppController],
     providers: [AppService],
