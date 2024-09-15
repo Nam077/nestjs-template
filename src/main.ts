@@ -1,9 +1,11 @@
 import { NestFactory } from '@nestjs/core';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
+import * as compression from 'compression';
+import * as cookieParser from 'cookie-parser';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 import { AppModule } from './app.module';
+import { setUpSwagger } from './common';
 
 /**
  * The function to bootstrap the application.
@@ -12,19 +14,10 @@ async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
     app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
+    app.use(cookieParser());
+    app.use(compression());
 
-    // swagger setup
-    const options = new DocumentBuilder()
-        .setTitle('The Template API')
-        .setDescription('This is project make to be a template for a new project')
-        .setVersion('1.0')
-        .addTag('nestjs')
-        .addBearerAuth()
-        .build();
-
-    const document = SwaggerModule.createDocument(app, options);
-
-    SwaggerModule.setup('api', app, document);
+    setUpSwagger(app);
 
     await app.listen(3000);
 }

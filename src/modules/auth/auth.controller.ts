@@ -21,20 +21,21 @@ export class AuthController {
     /**
      *
      * @param {LoginDto} loginDto - The login data transfer object
-     * @param {Response} res - The response object
+     * @param {Response} response - The response object
      * @returns {Promise<LoginResponse>} - The login response
      */
     @Post('login')
-    async login(@Body() loginDto: LoginDto, @Res() res: Response) {
+    async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) response: Response): Promise<LoginResponse> {
         const data = await this.authService.login(loginDto);
 
-        res.cookie('refreshToken', data.refreshToken, {
+        response.cookie('refreshToken', data.refreshToken, {
             httpOnly: true,
             secure: true,
             sameSite: 'none',
         });
+
         delete data.refreshToken;
 
-        return res.json(data);
+        return data;
     }
 }

@@ -7,11 +7,18 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { FindAllUserDto } from './dto/find-all.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import { CRUDInterface, FindOneOptionsCustom, PaginationData, ResponseData } from '../../common';
-import { findWithPaginationAndSearch, SearchField } from '../../common/helpers/paginate';
+import {
+    CRUDInterface,
+    FindOneOptionsCustom,
+    findWithPaginationAndSearch,
+    PaginationData,
+    ResponseData,
+    SearchField,
+} from '../../common';
 import { LoginDto } from '../auth/dtos/login.dto';
 
 /**
+ * @description User service implementation
  * User service implementation
  */
 @Injectable()
@@ -42,7 +49,10 @@ export class UserService
      * @returns {Promise<boolean>} - Whether the email exists
      */
     async checkExistByEmail(email: string): Promise<boolean> {
-        return await this.userRepository.exist({ where: { email } });
+        return await this.userRepository.exists({
+            where: { email },
+            withDeleted: true,
+        });
     }
 
     /**
