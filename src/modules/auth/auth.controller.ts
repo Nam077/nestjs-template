@@ -7,6 +7,7 @@ import { Response, Request } from 'express';
 import { AuthService, LoginResponse } from './auth.service';
 import { LoginDto } from './dtos/login.dto';
 import { RegisterDto } from './dtos/register.dto';
+import { FacebookGuard } from './guard/facebook.guard';
 import { GithubGuard } from './guard/github.guard';
 import { RefreshTokenGuard } from './guard/jwt-refresh.guard';
 import { CurrentUser } from '../../common';
@@ -130,6 +131,32 @@ export class AuthController {
         // Xử lý callback từ GitHub
         return {
             message: 'User information from GitHub',
+            user: req.user,
+        };
+    }
+
+    /**
+     *
+     * @param {Request} req - The request object
+     * @returns {Promise<any>} - The user information from Facebook
+     */
+    @Get('facebook')
+    @UseGuards(FacebookGuard)
+    async facebookAuth(@Req() req) {
+        return req.user;
+    }
+
+    /**
+     *
+     * @param {Request} req - The request object
+     * @returns {any} - The user information from Facebook
+     */
+    @Get('facebook/callback')
+    @UseGuards(FacebookGuard)
+    facebookAuthRedirect(@Req() req) {
+        // Xử lý callback từ Facebook
+        return {
+            message: 'User information from Facebook',
             user: req.user,
         };
     }
