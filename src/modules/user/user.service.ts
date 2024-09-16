@@ -357,8 +357,9 @@ export class UserService
     }
 
     /**
-     *
+     * @description Register a new user
      * @param {RegisterDto} registerDto - The register data transfer object
+     * @returns {Promise<User>} - The user entity
      */
     async register(registerDto: RegisterDto) {
         return await this.createEntity({

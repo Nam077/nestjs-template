@@ -25,11 +25,12 @@ export const IsOptionalCustom = (options?: ValidationOptions): PropertyDecorator
 @ValidatorConstraint({ async: false })
 export class MatchConstraint implements ValidatorConstraintInterface {
     /**
-     *
+     * Validate the value
      * @param {any} value - The value to validate
      * @param {ValidationArguments} args - The validation arguments
+     * @returns {boolean} - True if the value is valid, false otherwise
      */
-    validate(value: any, args: ValidationArguments) {
+    validate(value: any, args: ValidationArguments): boolean {
         const [relatedPropertyName] = args.constraints;
         const relatedValue = get(args.object, relatedPropertyName);
 
@@ -37,10 +38,11 @@ export class MatchConstraint implements ValidatorConstraintInterface {
     }
 
     /**
-     *
+     * Get the default message
      * @param {ValidationArguments} args - The validation arguments to use
+     * @returns {string} - The default message
      */
-    defaultMessage(args: ValidationArguments) {
+    defaultMessage(args: ValidationArguments): string {
         const [relatedPropertyName] = args.constraints;
 
         return `${relatedPropertyName} and ${args.property} do not match`;
@@ -51,6 +53,7 @@ export class MatchConstraint implements ValidatorConstraintInterface {
  *
  * @param {string} property - The property to match
  * @param {ValidationOptions} validationOptions - The validation options
+ * @returns {PropertyDecorator} - The property decorator
  */
 export function Match(property: string, validationOptions?: ValidationOptions) {
     return (object: NonNullable<unknown>, propertyName: string) => {

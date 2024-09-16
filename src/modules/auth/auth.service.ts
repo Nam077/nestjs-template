@@ -136,10 +136,11 @@ export class AuthService {
     }
 
     /**
-     *
+     * @description Register a user with the register data transfer object
      * @param {RegisterDto} registerDto - The register data transfer object
+     * @returns {Promise<any>} - The register response
      */
-    async register(registerDto: RegisterDto) {
+    async register(registerDto: RegisterDto): Promise<any> {
         const user: User = await this.userService.register(registerDto);
 
         delete user.password;

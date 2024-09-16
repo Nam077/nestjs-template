@@ -46,8 +46,7 @@ export class AuthController {
     /**
      * Route này sử dụng Refresh Token để làm mới Access Token.
      * @param {User} user - Người dùng hiện tại.
-     * @param {Request} req - Yêu cầu HTTP.
-     * @param res
+     * @returns {Promise<LoginResponse>} - The login response
      */
     @UseGuards(RefreshTokenGuard) // Bảo vệ route bằng RefreshTokenGuard
     @Post('refresh-token')
@@ -56,12 +55,16 @@ export class AuthController {
     }
 
     /**
-     *
+     * @description Register a user with the register data transfer object
      * @param {RegisterDto} registerDto - The register data transfer object
      * @param {Response} response - The response object
+     * @returns {Promise<LoginResponse>} - The login response
      */
     @Post('register')
-    async register(@Body() registerDto: RegisterDto, @Res({ passthrough: true }) response: Response) {
+    async register(
+        @Body() registerDto: RegisterDto,
+        @Res({ passthrough: true }) response: Response,
+    ): Promise<LoginResponse> {
         const data = await this.authService.register(registerDto);
 
         response.cookie('refreshToken', data.refreshToken, {
