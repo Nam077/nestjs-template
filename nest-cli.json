@@ -3,11 +3,19 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
   "compilerOptions": {
+    "assets": [
+      {
+        "include": "i18n/**/*",
+        "watchAssets": true
+      },
+      {
+        "include": "mail/templates/**/*",
+        "watchAssets": true
+      }
+    ],
     "deleteOutDir": true
   },
-  "assets": [
-    { "include": ".env", "watchAssets": true },
-    { "include": ".env.development.local", "watchAssets": true }
-
-  ]
+  "generateOptions": {
+    "spec": false
+  }
 }
