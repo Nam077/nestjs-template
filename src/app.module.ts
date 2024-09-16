@@ -1,6 +1,8 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
+
+import { I18nMiddleware } from 'nestjs-i18n';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -33,4 +35,12 @@ import { WinstonModuleConfig } from './modules/winston/winston.module';
     controllers: [AppController],
     providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+    /**
+     *
+     * @param {MiddlewareConsumer} consumer - The middleware consumer
+     */
+    configure(consumer: MiddlewareConsumer) {
+        consumer.apply(I18nMiddleware).forRoutes('*');
+    }
+}

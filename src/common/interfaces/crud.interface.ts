@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/method-signature-style */
 import { FindOneOptionsCustom } from './find-one.interface';
 
 /**
@@ -24,7 +25,7 @@ export interface CRUDInterface<
      * @param createDTO - The DTO for creating a new entity
      * @returns The created entity
      */
-    createEntity: (createDTO: CREATE_DTO) => Promise<ENTITY>;
+    createEntity(createDTO: CREATE_DTO): Promise<ENTITY>;
 
     /**
      * Creates a new entity with the current user context
@@ -32,7 +33,7 @@ export interface CRUDInterface<
      * @param currentUser - The current user performing the operation
      * @returns The response data
      */
-    create: (createDTO: CREATE_DTO, currentUser: CURRENT_USER) => Promise<RESPONSE_DATA>;
+    create(createDTO: CREATE_DTO, currentUser: CURRENT_USER): Promise<RESPONSE_DATA>;
 
     /**
      * Core method for finding all entities
@@ -40,7 +41,7 @@ export interface CRUDInterface<
      * @param includeDeleted - Include soft-deleted records if true
      * @returns The pagination data
      */
-    findAllEntities: (findAllDTO: FIND_ALL_DTO, includeDeleted?: boolean) => Promise<PAGINATION_DATA>;
+    findAllEntities(findAllDTO: FIND_ALL_DTO, includeDeleted?: boolean): Promise<PAGINATION_DATA>;
 
     /**
      * Finds all entities with the current user context
@@ -48,7 +49,7 @@ export interface CRUDInterface<
      * @param currentUser - The current user performing the operation
      * @returns The response data
      */
-    findAll: (findAllDTO: FIND_ALL_DTO, currentUser: CURRENT_USER) => Promise<RESPONSE_DATA>;
+    findAll(findAllDTO: FIND_ALL_DTO, currentUser: CURRENT_USER): Promise<RESPONSE_DATA>;
 
     /**
      * Core method for finding one entity by ID
@@ -57,7 +58,7 @@ export interface CRUDInterface<
      * @param includeDeleted - Include soft-deleted record if true
      * @returns The found entity
      */
-    findEntityById: (id: string, options?: FindOneOptionsCustom<ENTITY>, includeDeleted?: boolean) => Promise<ENTITY>;
+    findEntityById(id: string, options?: FindOneOptionsCustom<ENTITY>, includeDeleted?: boolean): Promise<ENTITY>;
 
     /**
      * Finds one entity by ID with the current user context
@@ -65,7 +66,7 @@ export interface CRUDInterface<
      * @param currentUser - The current user performing the operation
      * @returns The response data
      */
-    findOne: (id: string, currentUser: CURRENT_USER) => Promise<RESPONSE_DATA>;
+    findOne(id: string, currentUser: CURRENT_USER): Promise<RESPONSE_DATA>;
 
     /**
      * Finds one entity by ID or throws an error if not found
@@ -75,12 +76,12 @@ export interface CRUDInterface<
      * @param currentUser - The current user performing the operation
      * @returns The found entity
      */
-    findOneOrFail: (
+    findOneOrFail(
         id: string,
         options?: FindOneOptionsCustom<ENTITY>,
         includeDeleted?: boolean,
         currentUser?: CURRENT_USER,
-    ) => Promise<ENTITY>;
+    ): Promise<ENTITY>;
 
     /**
      * Core method for updating an entity
@@ -88,7 +89,7 @@ export interface CRUDInterface<
      * @param updateDTO - The DTO for updating the entity
      * @returns The updated entity
      */
-    updateEntity: (id: string, updateDTO: UPDATE_DTO) => Promise<ENTITY>;
+    updateEntity(id: string, updateDTO: UPDATE_DTO): Promise<ENTITY>;
 
     /**
      * Updates an entity with the current user context
@@ -97,14 +98,14 @@ export interface CRUDInterface<
      * @param currentUser - The current user performing the operation
      * @returns The response data
      */
-    update: (id: string, updateDTO: UPDATE_DTO, currentUser: CURRENT_USER) => Promise<RESPONSE_DATA>;
+    update(id: string, updateDTO: UPDATE_DTO, currentUser: CURRENT_USER): Promise<RESPONSE_DATA>;
 
     /**
      * Core method for soft-deleting an entity
      * @param id - The ID of the entity
      * @returns The soft-deleted entity
      */
-    softDeleteEntity: (id: string) => Promise<ENTITY>;
+    softDeleteEntity(id: string): Promise<ENTITY>;
 
     /**
      * Soft-deletes an entity with the current user context
@@ -112,14 +113,14 @@ export interface CRUDInterface<
      * @param currentUser - The current user performing the operation
      * @returns The response data
      */
-    remove: (id: string, currentUser: CURRENT_USER) => Promise<RESPONSE_DATA>;
+    remove(id: string, currentUser: CURRENT_USER): Promise<RESPONSE_DATA>;
 
     /**
      * Core method for restoring a soft-deleted entity
      * @param id - The ID of the entity
      * @returns The restored entity
      */
-    restoreEntity: (id: string) => Promise<ENTITY>;
+    restoreEntity(id: string): Promise<ENTITY>;
 
     /**
      * Restores a soft-deleted entity with the current user context
@@ -127,7 +128,7 @@ export interface CRUDInterface<
      * @param currentUser - The current user performing the operation
      * @returns The response data
      */
-    restore: (id: string, currentUser: CURRENT_USER) => Promise<RESPONSE_DATA>;
+    restore(id: string, currentUser: CURRENT_USER): Promise<RESPONSE_DATA>;
 
     /**
      * Core method for permanently deleting an entity
@@ -135,7 +136,7 @@ export interface CRUDInterface<
      * @param force - Force deletion if true
      * @returns The deleted entity
      */
-    deleteEntity: (id: string, force?: boolean) => Promise<ENTITY>;
+    deleteEntity(id: string, force?: boolean): Promise<ENTITY>;
 
     /**
      * Permanently deletes an entity with the current user context
@@ -144,5 +145,5 @@ export interface CRUDInterface<
      * @param force - Force deletion if true
      * @returns The response data
      */
-    delete: (id: string, currentUser: CURRENT_USER, force?: boolean) => Promise<RESPONSE_DATA>;
+    delete(id: string, currentUser: CURRENT_USER, force?: boolean): Promise<RESPONSE_DATA>;
 }

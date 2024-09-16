@@ -1,6 +1,13 @@
 import { Module } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
-import { AcceptLanguageResolver, HeaderResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
+import {
+    AcceptLanguageResolver,
+    HeaderResolver,
+    I18nModule,
+    I18nOptionsWithoutResolvers,
+    QueryResolver,
+} from 'nestjs-i18n';
 import { join } from 'path';
 
 /**
@@ -8,22 +15,31 @@ import { join } from 'path';
  */
 @Module({
     imports: [
-        I18nModule.forRoot({
-            fallbackLanguage: 'en',
-            fallbacks: {
-                'en-US': 'en',
-                'vi-VN': 'vi',
-            },
-            loaderOptions: {
-                path: join(__dirname, '../../i18n/'),
-                watch: true,
-            },
+        I18nModule.forRootAsync({
+            /**
+             * The function to provide the configuration.
+             * @param {ConfigService} configService - The configuration service.
+             * @returns {Promise<I18nOptionsWithoutResolvers>} The configuration.
+             */
+            useFactory: (configService: ConfigService): I18nOptionsWithoutResolvers => ({
+                fallbackLanguage: configService.get('FALLBACK_LANGUAGE'),
+                fallbacks: {
+                    'en-US': 'en',
+                    'vi-VN': 'vi',
+                },
+                loaderOptions: {
+                    path: join(__dirname, '../../i18n/'),
+                    watch: true,
+                },
+
+                typesOutputPath: join(__dirname, '../../../src/i18n/i18n.generated.ts'),
+            }),
             resolvers: [
-                { use: QueryResolver, options: ['lang'] },
-                AcceptLanguageResolver,
-                new HeaderResolver(['x-lang']),
+                new HeaderResolver(['x-custom-lang']),
+                new QueryResolver(['lang']),
+                new AcceptLanguageResolver(),
             ],
-            typesOutputPath: join(__dirname, '../../../src/i18n/i18n.generated.ts'),
+            inject: [ConfigService],
         }),
     ],
     providers: [],

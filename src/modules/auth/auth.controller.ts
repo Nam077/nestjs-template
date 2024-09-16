@@ -1,14 +1,17 @@
-import { Controller, Post, Body, Res, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Res, UseGuards, Get, Req } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { ApiTags } from '@nestjs/swagger';
 
-import { Response } from 'express';
+import { Response, Request } from 'express';
 
 import { AuthService, LoginResponse } from './auth.service';
 import { LoginDto } from './dtos/login.dto';
 import { RegisterDto } from './dtos/register.dto';
+import { GithubGuard } from './guard/github.guard';
 import { RefreshTokenGuard } from './guard/jwt-refresh.guard';
 import { CurrentUser } from '../../common';
 import { User } from '../user/entities/user.entity';
+
 /**
  * The AuthController is the controller that handles the authentication routes.
  * @class AuthController
@@ -76,5 +79,58 @@ export class AuthController {
         delete data.refreshToken;
 
         return data;
+    }
+
+    /**
+     *
+     * @param {Request} req - The request object
+     * @returns {Promise<LoginResponse>} - The login response
+     */
+    @Get('google')
+    @UseGuards(AuthGuard('google'))
+    async googleAuth(@Req() req: Request) {
+        return req.user;
+    }
+
+    /**
+     *
+     * @param {Request} req - The request object
+     * @returns {any} - The user information from Google
+     * @description Handles the Google OAuth callback
+     */
+    @Get('google/callback')
+    @UseGuards(AuthGuard('google'))
+    googleAuthRedirect(@Req() req: Request): any {
+        // Handles the Google OAuth callback
+        return {
+            message: 'User information from Google',
+            user: req.user,
+        };
+    }
+
+    /**
+     *
+     * @param {Request} req - The request object
+     * @returns {Promise<any>} - The user information from GitHub
+     */
+    @Get('github')
+    @UseGuards(GithubGuard)
+    async githubAuth(@Req() req: Request): Promise<any> {
+        return req.user;
+    }
+
+    /**
+     *
+     * @param {Request} req - The request object
+     * @returns {any} - The user information from GitHub
+     */
+    @Get('github/callback')
+    @UseGuards(GithubGuard)
+    githubAuthRedirect(@Req() req) {
+        // Xử lý callback từ GitHub
+        return {
+            message: 'User information from GitHub',
+            user: req.user,
+        };
     }
 }
