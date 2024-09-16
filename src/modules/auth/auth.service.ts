@@ -4,6 +4,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { LoginDto } from './dtos/login.dto';
+import { RegisterDto } from './dtos/register.dto';
 import { JwtPayload, JwtServiceGenerateToken, JwtToken } from './jwt.service';
 import { KeyService } from '../key/key.service';
 import { RefreshTokenService } from '../refresh-token/refresh-token.service';
@@ -20,17 +21,6 @@ export interface LoginResponse {
  */
 @Injectable()
 export class AuthService {
-    // eslint-disable-next-line jsdoc/require-returns-check
-
-    /**
-     *
-     * @param user
-     */
-    refreshAccessToken(user: User) {
-        user;
-        throw new Error('Method not implemented.');
-    }
-
     /**
      * @param {UserService} userService - The user service instance
      * @param {JwtServiceGenerateToken} jwtServiceGenerateToken - The jwt service instance
@@ -53,15 +43,20 @@ export class AuthService {
      * @returns {Promise<LoginResponse>} - The login response
      */
     async login(loginDto: LoginDto): Promise<LoginResponse> {
-        const user: User = await this.userService.login(loginDto);
-        const token: JwtToken = await this.jwtServiceGenerateToken.generateToken(user);
+        try {
+            const user: User = await this.userService.login(loginDto);
+            const token: JwtToken = await this.jwtServiceGenerateToken.generateToken(user);
 
-        await this.refreshTokenService.createRefreshToken(user, token.refreshToken);
+            await this.refreshTokenService.createRefreshToken(user, token.refreshToken);
 
-        return {
-            ...token,
-            user,
-        };
+            return {
+                ...token,
+                user,
+            };
+        } catch (error) {
+            console.log(error.message);
+            throw new UnauthorizedException('Email hoặc mật khẩu không chính xác');
+        }
     }
 
     /**
@@ -93,7 +88,6 @@ export class AuthService {
             throw new UnauthorizedException('Người dùng không tồn tại');
         }
 
-        // Kiểm tra token dựa trên user và refreshToken trong cơ sở dữ liệu
         const validToken = await this.refreshTokenService.findRefreshTokenForUser(user, refreshToken);
 
         if (!validToken) {
@@ -128,5 +122,38 @@ export class AuthService {
                 throw new UnauthorizedException('Refresh token không hợp lệ');
             }
         }
+    }
+
+    /**
+     *
+     * @param {User} user - The user
+     * @returns {Promise<{ accessToken: string }>} - The access token
+     */
+    async refreshAccessToken(user: User): Promise<{ accessToken: string }> {
+        return {
+            accessToken: await this.jwtServiceGenerateToken.generateAccessToken(user),
+        };
+    }
+
+    /**
+     *
+     * @param {RegisterDto} registerDto - The register data transfer object
+     */
+    async register(registerDto: RegisterDto) {
+        const user: User = await this.userService.register(registerDto);
+
+        delete user.password;
+        delete user.createdAt;
+        delete user.updatedAt;
+
+        const token: JwtToken = await this.jwtServiceGenerateToken.generateToken(user);
+
+        await this.refreshTokenService.createRefreshToken(user, token.refreshToken);
+
+        return {
+            message: 'Register successfully',
+            user,
+            ...token,
+        };
     }
 }

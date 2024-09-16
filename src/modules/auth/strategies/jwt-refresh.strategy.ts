@@ -47,7 +47,6 @@ export class RefreshTokenStrategy extends PassportStrategy(Strategy, 'jwt-refres
         const refreshToken = req.cookies['refreshToken']; // Lấy refresh token từ cookies
         const userId = payload.sub; // Lấy userId từ payload
 
-        // Kiểm tra tính hợp lệ của Refresh Token và người dùng.
         const user = await this.authService.getUserIfRefreshTokenMatches(refreshToken, userId);
 
         if (!user) {

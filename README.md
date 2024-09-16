@@ -31,6 +31,12 @@
 ```bash
 $ yarn install
 ```
+## Environment Variables
+
+```bash
+cp .env.example .env
+cp .env.development.example .env.development.local
+```
 
 ## Running the app
 

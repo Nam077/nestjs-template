@@ -15,8 +15,10 @@ import {
     removeKeyNotAccepted,
     ResponseData,
     SearchField,
+    UserRole,
 } from '../../common';
 import { LoginDto } from '../auth/dtos/login.dto';
+import { RegisterDto } from '../auth/dtos/register.dto';
 
 /**
  * @description User service implementation
@@ -342,7 +344,7 @@ export class UserService
 
         const user = await this.userRepository.findOne({
             where: { email },
-            select: ['name', 'email', 'role', 'password'],
+            select: ['name', 'email', 'role', 'password', 'id'],
         });
 
         if (!user || !user.comparePassword(password)) {
@@ -352,5 +354,18 @@ export class UserService
         delete user.password;
 
         return user;
+    }
+
+    /**
+     *
+     * @param {RegisterDto} registerDto - The register data transfer object
+     */
+    async register(registerDto: RegisterDto) {
+        return await this.createEntity({
+            name: registerDto.name,
+            email: registerDto.email,
+            role: UserRole.USER,
+            password: registerDto.password,
+        });
     }
 }

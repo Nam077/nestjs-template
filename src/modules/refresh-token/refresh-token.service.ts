@@ -29,13 +29,18 @@ export class RefreshTokenService {
      * @returns {Promise<RefreshToken>} - The new refresh token.
      */
     async createRefreshToken(user: User, token: string): Promise<RefreshToken> {
-        const refreshToken = this.refreshTokenRepository.create({
-            token,
-            isActive: true,
-            user,
-        });
+        try {
+            const refreshToken = this.refreshTokenRepository.create({
+                token,
+                isActive: true,
+                user,
+            });
 
-        return this.refreshTokenRepository.save(refreshToken);
+            return await this.refreshTokenRepository.save(refreshToken);
+        } catch (error) {
+            console.log(error.message);
+            throw new Error('Could not create refresh token');
+        }
     }
 
     /**
@@ -61,6 +66,14 @@ export class RefreshTokenService {
      * @returns {Promise<RefreshToken | null>} - Returns the token if valid, null otherwise.
      */
     async findRefreshTokenForUser(user: User, token: string): Promise<RefreshToken | null> {
-        return this.refreshTokenRepository.findOne({ where: { user, token, isActive: true } });
+        return await this.refreshTokenRepository.findOne({
+            where: {
+                user: {
+                    id: user.id,
+                },
+                token,
+                isActive: true,
+            },
+        });
     }
 }
