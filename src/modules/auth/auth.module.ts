@@ -7,13 +7,14 @@ import { AuthService } from './auth.service';
 import { JwtServiceGenerateToken } from './jwt.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { KeyModule } from '../key/key.module';
+import { RefreshTokenModule } from '../refresh-token/refresh-token.module';
 import { UserModule } from '../user/user.module';
 
 /**
  *
  */
 @Module({
-    imports: [UserModule, JwtModule.register({}), ConfigModule.forRoot(), KeyModule],
+    imports: [UserModule, JwtModule.register({}), ConfigModule.forRoot(), KeyModule, RefreshTokenModule],
     controllers: [AuthController],
     providers: [AuthService, JwtServiceGenerateToken, JwtStrategy],
     exports: [AuthService],

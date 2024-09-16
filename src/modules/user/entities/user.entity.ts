@@ -1,6 +1,7 @@
-import { Entity, Column, BeforeUpdate, BeforeInsert, Index } from 'typeorm';
+import { Entity, Column, BeforeUpdate, BeforeInsert, Index, OneToMany } from 'typeorm';
 
 import { BaseEntityClass, BcryptServiceInstance, UserRole } from '../../../common';
+import { RefreshToken } from '../../refresh-token/entities/refresh-token.entity';
 
 /**
  * The User entity class is an object that represents the data of a user.
@@ -72,4 +73,8 @@ export class User extends BaseEntityClass {
     comparePassword(password: string): boolean {
         return BcryptServiceInstance.compare(password, this.password);
     }
+
+    /// relations
+    @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
+    refreshTokens: RefreshToken[]; // Mối quan hệ một người dùng có nhiều refresh token
 }

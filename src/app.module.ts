@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { DatabaseModule } from './modules/database/database.module';
 import { KeyModule } from './modules/key/key.module';
+import { RefreshTokenModule } from './modules/refresh-token/refresh-token.module';
 import { UserModule } from './modules/user/user.module';
 import { WinstonModuleConfig } from './modules/winston/winston.module';
 
@@ -25,6 +26,7 @@ import { WinstonModuleConfig } from './modules/winston/winston.module';
         AuthModule,
         KeyModule,
         ScheduleModule.forRoot(),
+        RefreshTokenModule,
     ],
     controllers: [AppController],
     providers: [AppService],

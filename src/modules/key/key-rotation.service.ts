@@ -6,19 +6,19 @@ import { KeyService } from './key.service';
 import { KeyType } from '../../common';
 
 /**
- *
+ * @class KeyRotationService
+ * @description The key rotation service that handles the key rotation cron job
+ * @exports KeyRotationService
  */
 @Injectable()
 export class KeyRotationService {
     /**
-     *
      * @param {KeyService} keyService - The key service
      */
     constructor(private keyService: KeyService) {}
 
-    // Chạy Cron Job mỗi ngày lúc 00:00
     /**
-     *
+     * @description The cron job that rotates the keys every month and removes the old keys every month
      */
     @Cron('0 0 1 * *')
     async handleCron() {

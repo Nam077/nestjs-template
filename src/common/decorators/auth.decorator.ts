@@ -17,7 +17,7 @@ export const Public = (): ReturnType<typeof SetMetadata> => SetMetadata(IS_PUBLI
  */
 export function CurrentUser<T>(): ParameterDecorator {
     return createParamDecorator<keyof T | undefined, ExecutionContext>(
-        (data: keyof T | undefined, ctx: ExecutionContext): T | T[keyof T] => {
+        (data: keyof T, ctx: ExecutionContext): T | T[keyof T] => {
             const request = ctx.switchToHttp().getRequest();
             const user = request.user as T;
 

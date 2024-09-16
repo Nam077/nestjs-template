@@ -25,7 +25,7 @@ export interface SearchField {
 export interface CustomCondition {
     field: string;
     value: any;
-    operator?: 'EQUAL' | 'LIKE' | 'LT' | 'GT' | 'BETWEEN';
+    operator?: 'EQUAL' | 'LIKE' | 'LT' | 'GT' | 'BETWEEN' | 'IN' | 'NOT_IN';
 }
 
 /**
@@ -53,6 +53,12 @@ const applyAdditionalConditions = <T>(queryBuilder: SelectQueryBuilder<T>, condi
                 const { start, end } = value as { start: any; end: any };
 
                 queryBuilder.andWhere(`${conditionString} BETWEEN :start AND :end`, { start, end });
+                break;
+            case 'IN':
+                queryBuilder.andWhere(`${conditionString} IN (:...${paramName})`, { [paramName]: value });
+                break;
+            case 'NOT_IN':
+                queryBuilder.andWhere(`${conditionString} NOT IN (:...${paramName})`, { [paramName]: value });
                 break;
             default:
                 queryBuilder.andWhere(`${conditionString} = :${paramName}`, { [paramName]: value });

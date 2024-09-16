@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+import { Expose } from 'class-transformer';
 import { IsString, IsEmail, IsEnum, Length } from 'class-validator';
 
 import { UserRole } from '../../../common';
@@ -17,6 +18,7 @@ export class CreateUserDto {
     })
     @IsString()
     @Length(1, 100)
+    @Expose()
     name: string;
 
     @ApiProperty({
@@ -33,6 +35,7 @@ export class CreateUserDto {
         example: 'StrongP@ssw0rd',
     })
     @IsString()
+    @Expose()
     password: string;
 
     @ApiProperty({
@@ -42,5 +45,6 @@ export class CreateUserDto {
         example: UserRole.USER,
     })
     @IsEnum(UserRole)
+    @Expose()
     role: UserRole;
 }

@@ -1,7 +1,12 @@
-import { Injectable } from '@nestjs/common';
+/* eslint-disable jsdoc/require-param-type */
+/* eslint-disable jsdoc/require-param-description */
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 
 import { LoginDto } from './dtos/login.dto';
 import { JwtPayload, JwtServiceGenerateToken, JwtToken } from './jwt.service';
+import { KeyService } from '../key/key.service';
+import { RefreshTokenService } from '../refresh-token/refresh-token.service';
 import { User } from '../user/entities/user.entity';
 import { UserService } from '../user/user.service';
 
@@ -15,14 +20,31 @@ export interface LoginResponse {
  */
 @Injectable()
 export class AuthService {
+    // eslint-disable-next-line jsdoc/require-returns-check
+
+    /**
+     *
+     * @param user
+     */
+    refreshAccessToken(user: User) {
+        user;
+        throw new Error('Method not implemented.');
+    }
+
     /**
      * @param {UserService} userService - The user service instance
      * @param {JwtServiceGenerateToken} jwtServiceGenerateToken - The jwt service instance
+     * @param {KeyService} keyService - The key service instance
+     * @param {JwtService} jwtService - The jwt service instance
+     * @param {RefreshTokenService} refreshTokenService - The refresh token service instance
      * @description Constructor of the AuthService
      */
     constructor(
         private readonly userService: UserService,
         private readonly jwtServiceGenerateToken: JwtServiceGenerateToken,
+        private readonly keyService: KeyService,
+        private readonly jwtService: JwtService,
+        private readonly refreshTokenService: RefreshTokenService,
     ) {}
 
     /**
@@ -33,6 +55,8 @@ export class AuthService {
     async login(loginDto: LoginDto): Promise<LoginResponse> {
         const user: User = await this.userService.login(loginDto);
         const token: JwtToken = await this.jwtServiceGenerateToken.generateToken(user);
+
+        await this.refreshTokenService.createRefreshToken(user, token.refreshToken);
 
         return {
             ...token,
@@ -54,5 +78,55 @@ export class AuthService {
                 name: true,
             },
         });
+    }
+
+    /**
+     * Kiểm tra tính hợp lệ của Refresh Token và xác thực dựa trên userId và tokenId.
+     * @param {string} refreshToken - Refresh Token từ cookies.
+     * @param {string} userId - ID người dùng từ payload của JWT.
+     * @returns {Promise<any>} - Trả về người dùng nếu token hợp lệ.
+     */
+    async getUserIfRefreshTokenMatches(refreshToken: string, userId: string): Promise<any> {
+        const user = await this.userService.findEntityById(userId);
+
+        if (!user) {
+            throw new UnauthorizedException('Người dùng không tồn tại');
+        }
+
+        // Kiểm tra token dựa trên user và refreshToken trong cơ sở dữ liệu
+        const validToken = await this.refreshTokenService.findRefreshTokenForUser(user, refreshToken);
+
+        if (!validToken) {
+            throw new UnauthorizedException('Refresh token không hợp lệ hoặc đã hết hạn');
+        }
+
+        try {
+            // Lấy kid từ header của token
+            const decodedToken = this.jwtService.decode(refreshToken, { complete: true }) as any;
+            const kid = decodedToken?.header?.kid;
+
+            if (!kid) {
+                throw new UnauthorizedException('Kid không tồn tại trong token header');
+            }
+
+            // Lấy khóa bí mật từ KeyService dựa trên kid
+            const secret = await this.keyService.getSecretKeyById(kid);
+
+            // Xác thực Refresh Token bằng khóa bí mật tương ứng với kid
+            this.jwtService.verify(refreshToken, {
+                secret,
+            });
+
+            return user;
+        } catch (error) {
+            if (error.name === 'TokenExpiredError') {
+                // Nếu token hết hạn, xóa token khỏi cơ sở dữ liệu
+                await this.refreshTokenService.removeRefreshToken(refreshToken);
+                throw new UnauthorizedException('Refresh token đã hết hạn và bị xóa');
+            } else {
+                // Nếu token không hợp lệ (lỗi khác)
+                throw new UnauthorizedException('Refresh token không hợp lệ');
+            }
+        }
     }
 }

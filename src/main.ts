@@ -1,3 +1,4 @@
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
 import * as compression from 'compression';
@@ -15,6 +16,13 @@ async function bootstrap() {
 
     app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
     app.use(cookieParser());
+    app.useGlobalPipes(
+        new ValidationPipe({
+            transform: true,
+            whitelist: true,
+            forbidNonWhitelisted: true,
+        }),
+    );
     app.use(compression());
 
     setUpSwagger(app);

@@ -12,6 +12,7 @@ import {
     FindOneOptionsCustom,
     findWithPaginationAndSearch,
     PaginationData,
+    removeKeyNotAccepted,
     ResponseData,
     SearchField,
 } from '../../common';
@@ -64,7 +65,7 @@ export class UserService
     async create(createDTO: CreateUserDto, currentUser: User): Promise<ResponseData<User>> {
         const createdUser = await this.createEntity(createDTO);
 
-        console.log(currentUser);
+        currentUser;
 
         return {
             status: HttpStatus.CREATED,
@@ -140,7 +141,7 @@ export class UserService
     async findAll(findAllDTO: FindAllUserDto, currentUser: User): Promise<ResponseData<User>> {
         const users = await this.findAllEntities(findAllDTO);
 
-        console.log(currentUser);
+        currentUser;
 
         return {
             status: HttpStatus.OK,
@@ -179,7 +180,7 @@ export class UserService
     async findOne(id: string, currentUser: User): Promise<ResponseData<User>> {
         const user = await this.findOneOrFail(id);
 
-        console.log(currentUser);
+        currentUser;
 
         return {
             status: HttpStatus.FOUND,
@@ -229,7 +230,7 @@ export class UserService
     async remove(id: string, currentUser: User): Promise<ResponseData<User>> {
         const removedUser = await this.softDeleteEntity(id);
 
-        console.log(currentUser);
+        currentUser;
 
         return {
             status: HttpStatus.OK,
@@ -260,7 +261,7 @@ export class UserService
     async restore(id: string, currentUser: User): Promise<ResponseData<User>> {
         const restoredUser = await this.restoreEntity(id);
 
-        console.log(currentUser);
+        currentUser;
 
         return {
             status: HttpStatus.OK,
@@ -292,7 +293,7 @@ export class UserService
     async update(id: string, updateDTO: UpdateUserDto, currentUser: User): Promise<ResponseData<User>> {
         const updatedUser = await this.updateEntity(id, updateDTO);
 
-        console.log(currentUser);
+        currentUser;
 
         return {
             status: HttpStatus.OK,
@@ -309,10 +310,25 @@ export class UserService
      */
     async updateEntity(id: string, updateDTO: UpdateUserDto): Promise<User> {
         const user = await this.findOneOrFail(id);
+        const fieldsAccepted = ['name', 'email', 'password'];
+        const updateFields = removeKeyNotAccepted(updateDTO, fieldsAccepted);
 
-        Object.assign(user, updateDTO);
+        if (updateFields.email && user.email !== updateFields.email) {
+            const isEmailExist = await this.checkExistByEmail(updateDTO.email);
 
-        return await this.userRepository.save(user);
+            if (isEmailExist) {
+                throw new ConflictException('Email already exists');
+            }
+        }
+
+        if (updateFields.password) {
+            user.password = updateFields.password;
+        }
+
+        return await this.userRepository.save({
+            ...user,
+            ...updateFields,
+        });
     }
 
     /**
